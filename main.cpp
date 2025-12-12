@@ -15,7 +15,7 @@
  * - Вывод в формате PPM
  */
 
-#include <embree4/rtcore.h>
+#include <embree3/rtcore.h>
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -116,7 +116,7 @@ public:
         return localToWorld(localDir, normal);
     }
 
-    // Косинусно-взвешенное направление (для выборки по значимости Ламберта)
+    // Косинусно+взвешенное направление (для выборки по значимости Ламберта)
     Vec3 cosineHemisphere(const Vec3 &normal)
     {
         float r1 = uniform();
@@ -335,6 +335,33 @@ private:
     std::vector<AreaLight> lights;
     float totalLightPower;
 
+    // Thread-local контексты для каждого потока
+    static RTCIntersectContext &getIntersectContext()
+    {
+        static thread_local RTCIntersectContext context;
+        static thread_local bool initialized = false;
+        if (!initialized)
+        {
+            rtcInitIntersectContext(&context);
+            context.flags = RTC_INTERSECT_CONTEXT_FLAG_INCOHERENT;
+            initialized = true;
+        }
+        return context;
+    }
+
+    static RTCIntersectContext &getShadowContext()
+    {
+        static thread_local RTCIntersectContext context;
+        static thread_local bool initialized = false;
+        if (!initialized)
+        {
+            rtcInitIntersectContext(&context);
+            context.flags = RTC_INTERSECT_CONTEXT_FLAG_INCOHERENT;
+            initialized = true;
+        }
+        return context;
+    }
+
 public:
     Scene() : totalLightPower(0)
     {
@@ -437,8 +464,11 @@ public:
         rayhit.ray.flags = 0;
         rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
         rayhit.hit.instID[0] = RTC_INVALID_GEOMETRY_ID;
+        rayhit.hit.instID[1] = RTC_INVALID_GEOMETRY_ID;
+        rayhit.hit.instID[2] = RTC_INVALID_GEOMETRY_ID;
 
-        rtcIntersect1(scene, &rayhit);
+        RTCIntersectContext &context = getIntersectContext();
+        rtcIntersect1(scene, &context, &rayhit);
 
         if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID)
         {
@@ -468,7 +498,8 @@ public:
         ray.mask = -1;
         ray.flags = 0;
 
-        rtcOccluded1(scene, &ray);
+        RTCIntersectContext &context = getShadowContext();
+        rtcOccluded1(scene, &context, &ray);
 
         return ray.tfar >= 0; // Если tfar < 0, луч был заблокирован
     }
@@ -1263,8 +1294,8 @@ int main(int argc, char *argv[])
     // Параметры по умолчанию
     int width = 512;
     int height = 512;
-    int samplesPerPixel = 64;
-    int maxDepth = 10;
+    int samplesPerPixel = 128;
+    int maxDepth = 20;
     std::string outputFile = "output.ppm";
     std::string objFile = "";
     float objScale = 1.0f;
@@ -1370,7 +1401,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        createColoredLights(scene);
+        createThreeSpheres(scene);
     }
 
     scene.commit();
