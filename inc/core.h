@@ -165,6 +165,9 @@ private:
     std::vector<Material> materials;
     std::vector<AreaLight> lights;
     float totalLightPower;
+    // Thread-local контексты для каждого потока
+    static RTCIntersectContext &getIntersectContext();
+    static RTCIntersectContext &getShadowContext();
 
 public:
     Scene();

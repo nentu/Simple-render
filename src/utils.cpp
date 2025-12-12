@@ -1,11 +1,11 @@
-#include "inc/utils.h"
+#include "utils.h"
 
 // Гамма-коррекция и тональное отображение
 std::vector<unsigned char> tonemapAndGammaCorrect(
     const std::vector<Color> &hdrImage,
-    float exposure = 1.0f,
-    float gamma = 2.2f,
-    bool autoExposure = true)
+    float exposure,
+    float gamma,
+    bool autoExposure)
 {
 
     std::vector<unsigned char> ldrImage(hdrImage.size() * 3);
