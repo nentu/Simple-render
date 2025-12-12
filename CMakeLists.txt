@@ -24,10 +24,43 @@ else()
     message(STATUS "Found Embree 4")
 endif()
 
+# Устанавливаем пути
+set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/inc)
+set(SOURCE_DIR ${CMAKE_SOURCE_DIR}/src)
+
 # Исходные файлы
 set(SOURCES 
-    src/main.cpp
+    ${SOURCE_DIR}/main.cpp
+    ${SOURCE_DIR}/core.cpp
+    ${SOURCE_DIR}/pathtracer.cpp
+    ${SOURCE_DIR}/utils.cpp
+    ${SOURCE_DIR}/scenes.cpp
 )
+
+# Проверяем наличие файлов
+foreach(source_file ${SOURCES})
+    if(NOT EXISTS ${source_file})
+        message(WARNING "File ${source_file} not found!")
+    else()
+        message(STATUS "Found source file: ${source_file}")
+    endif()
+endforeach()
+
+# Проверяем наличие заголовочных файлов
+set(HEADER_FILES
+    ${INCLUDE_DIR}/core.h
+    ${INCLUDE_DIR}/pathtracer.h
+    ${INCLUDE_DIR}/utils.h
+    ${INCLUDE_DIR}/scenes.h
+)
+
+foreach(header_file ${HEADER_FILES})
+    if(NOT EXISTS ${header_file})
+        message(WARNING "Header file ${header_file} not found!")
+    else()
+        message(STATUS "Found header file: ${header_file}")
+    endif()
+endforeach()
 
 # Создаем исполняемый файл
 add_executable(path_tracer ${SOURCES})
@@ -40,7 +73,8 @@ find_package(OpenMP REQUIRED)
 target_link_libraries(path_tracer PRIVATE OpenMP::OpenMP_CXX)
 
 # Включаем директории с заголовочными файлами
-target_include_directories(path_tracer PRIVATE inc)
+target_include_directories(path_tracer PRIVATE ${INCLUDE_DIR})
+target_include_directories(path_tracer PRIVATE ${CMAKE_SOURCE_DIR})
 
 # Предупреждения компилятора
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -51,3 +85,7 @@ endif()
 if(MSVC)
     target_compile_options(path_tracer PRIVATE /W3)
 endif()
+
+# Дополнительные настройки
+set_property(TARGET path_tracer PROPERTY CXX_STANDARD 17)
+set_property(TARGET path_tracer PROPERTY CXX_STANDARD_REQUIRED ON)
