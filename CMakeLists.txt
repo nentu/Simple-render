@@ -25,7 +25,9 @@ else()
 endif()
 
 # Исходные файлы
-set(SOURCES main.cpp)
+set(SOURCES 
+    src/main.cpp
+)
 
 # Создаем исполняемый файл
 add_executable(path_tracer ${SOURCES})
@@ -37,7 +39,15 @@ target_link_libraries(path_tracer PRIVATE embree)
 find_package(OpenMP REQUIRED)
 target_link_libraries(path_tracer PRIVATE OpenMP::OpenMP_CXX)
 
+# Включаем директории с заголовочными файлами
+target_include_directories(path_tracer PRIVATE inc)
+
 # Предупреждения компилятора
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(path_tracer PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(path_tracer PRIVATE -Wall -Wextra -Wpedantic -Wno-unused-parameter)
+endif()
+
+# Для MSVC
+if(MSVC)
+    target_compile_options(path_tracer PRIVATE /W3)
 endif()

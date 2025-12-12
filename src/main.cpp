@@ -941,335 +941,494 @@ void savePPM(const std::string &filename, const std::vector<unsigned char> &imag
 
 // ==================== Создание сцены Cornell Box ====================
 
-void createCornellBox(Scene &scene)
+void createCylinderAndTetrahedron(Scene &scene)
 {
     // Материалы
-    int whiteMat = scene.addMaterial(Material::Diffuse(Color(0.73f, 0.73f, 0.73f)));
-    int redMat = scene.addMaterial(Material::Diffuse(Color(0.65f, 0.05f, 0.05f)));
-    int greenMat = scene.addMaterial(Material::Diffuse(Color(0.12f, 0.45f, 0.15f)));
-    int mirrorMat = scene.addMaterial(Material::Specular(Color(0.99f, 0.99f, 0.99f)));
-    int mixedMat = scene.addMaterial(Material::Mixed(Color(0.7f, 0.7f, 0.7f), Color(0.8f, 0.8f, 0.8f), 0.3f));
-    int lightMat = scene.addMaterial(Material::Emissive(Color(15.0f, 15.0f, 15.0f)));
+    int floorMat = scene.addMaterial(Material::Diffuse(Color(0.8f, 0.8f, 0.8f)));
+    int cylinderMat = scene.addMaterial(Material::Diffuse(Color(0.7f, 0.3f, 0.2f)));
+    int tetraMat = scene.addMaterial(Material::Specular(Color(0.9f, 0.9f, 0.9f)));
+    int lightMat = scene.addMaterial(Material::Emissive(Color(12.0f, 12.0f, 10.0f)));
 
-    // Размеры Cornell Box
-    float size = 5.0f;
+    float size = 4.0f;
 
-    // Пол (белый)
+    // Пол
     scene.addQuad(
         Vec3(-size, 0, -size), Vec3(size, 0, -size),
         Vec3(size, 0, size), Vec3(-size, 0, size),
-        whiteMat);
+        floorMat);
 
-    // Потолок (белый)
-    scene.addQuad(
-        Vec3(-size, size * 2, size), Vec3(size, size * 2, size),
-        Vec3(size, size * 2, -size), Vec3(-size, size * 2, -size),
-        whiteMat);
-
-    // Задняя стена (белая)
+    // Стены
     scene.addQuad(
         Vec3(-size, 0, -size), Vec3(-size, size * 2, -size),
         Vec3(size, size * 2, -size), Vec3(size, 0, -size),
-        whiteMat);
+        floorMat);
 
-    // Левая стена (красная)
-    scene.addQuad(
-        Vec3(-size, 0, size), Vec3(-size, size * 2, size),
-        Vec3(-size, size * 2, -size), Vec3(-size, 0, -size),
-        redMat);
+    // Цилиндр (аппроксимация 8 гранями)
+    float cylHeight = 3.0f;
+    float cylRadius = 1.0f;
+    float cx = 1.5f, cz = 1.0f;
+    int segments = 8;
 
-    // Правая стена (зеленая)
-    scene.addQuad(
-        Vec3(size, 0, -size), Vec3(size, size * 2, -size),
-        Vec3(size, size * 2, size), Vec3(size, 0, size),
-        greenMat);
+    for (int i = 0; i < segments; i++)
+    {
+        float angle1 = (i * 2 * M_PI) / segments;
+        float angle2 = ((i + 1) * 2 * M_PI) / segments;
 
-    // Высокий блок (зеркальный)
-    float bx1 = 1.5f, bz1 = -2.0f;
-    float blockHeight1 = 6.0f;
-    float blockSize1 = 2.5f;
+        Vec3 v1(cx + cylRadius * cos(angle1), 0, cz + cylRadius * sin(angle1));
+        Vec3 v2(cx + cylRadius * cos(angle2), 0, cz + cylRadius * sin(angle2));
+        Vec3 v3(cx + cylRadius * cos(angle2), cylHeight, cz + cylRadius * sin(angle2));
+        Vec3 v4(cx + cylRadius * cos(angle1), cylHeight, cz + cylRadius * sin(angle1));
 
-    // Верх блока
-    scene.addQuad(
-        Vec3(bx1 - blockSize1 / 2, blockHeight1, bz1 - blockSize1 / 2),
-        Vec3(bx1 + blockSize1 / 2, blockHeight1, bz1 - blockSize1 / 2),
-        Vec3(bx1 + blockSize1 / 2, blockHeight1, bz1 + blockSize1 / 2),
-        Vec3(bx1 - blockSize1 / 2, blockHeight1, bz1 + blockSize1 / 2),
-        mirrorMat);
+        // Боковая грань
+        scene.addTriangle(Triangle(v1, v2, v3, cylinderMat));
+        scene.addTriangle(Triangle(v1, v3, v4, cylinderMat));
 
-    // Стороны высокого блока
-    scene.addQuad(
-        Vec3(bx1 - blockSize1 / 2, 0, bz1 + blockSize1 / 2),
-        Vec3(bx1 - blockSize1 / 2, blockHeight1, bz1 + blockSize1 / 2),
-        Vec3(bx1 - blockSize1 / 2, blockHeight1, bz1 - blockSize1 / 2),
-        Vec3(bx1 - blockSize1 / 2, 0, bz1 - blockSize1 / 2),
-        mirrorMat);
-    scene.addQuad(
-        Vec3(bx1 + blockSize1 / 2, 0, bz1 - blockSize1 / 2),
-        Vec3(bx1 + blockSize1 / 2, blockHeight1, bz1 - blockSize1 / 2),
-        Vec3(bx1 + blockSize1 / 2, blockHeight1, bz1 + blockSize1 / 2),
-        Vec3(bx1 + blockSize1 / 2, 0, bz1 + blockSize1 / 2),
-        mirrorMat);
-    scene.addQuad(
-        Vec3(bx1 - blockSize1 / 2, 0, bz1 - blockSize1 / 2),
-        Vec3(bx1 - blockSize1 / 2, blockHeight1, bz1 - blockSize1 / 2),
-        Vec3(bx1 + blockSize1 / 2, blockHeight1, bz1 - blockSize1 / 2),
-        Vec3(bx1 + blockSize1 / 2, 0, bz1 - blockSize1 / 2),
-        mirrorMat);
-    scene.addQuad(
-        Vec3(bx1 + blockSize1 / 2, 0, bz1 + blockSize1 / 2),
-        Vec3(bx1 + blockSize1 / 2, blockHeight1, bz1 + blockSize1 / 2),
-        Vec3(bx1 - blockSize1 / 2, blockHeight1, bz1 + blockSize1 / 2),
-        Vec3(bx1 - blockSize1 / 2, 0, bz1 + blockSize1 / 2),
-        mirrorMat);
+        // Верхняя грань (крышка)
+        scene.addTriangle(Triangle(Vec3(cx, cylHeight, cz), v4, v3, cylinderMat));
+    }
 
-    // Низкий блок (смешанный материал)
-    float bx2 = -1.5f, bz2 = 1.0f;
-    float blockHeight2 = 3.0f;
-    float blockSize2 = 2.5f;
+    // Тетраэдр (пирамида с треугольным основанием)
+    float tx = -1.5f, tz = -1.0f, th = 2.5f;
+    Vec3 base1(tx - 1.0f, 0, tz - 0.5f);
+    Vec3 base2(tx + 1.0f, 0, tz - 0.5f);
+    Vec3 base3(tx, 0, tz + 1.0f);
+    Vec3 top(tx, th, tz);
 
-    // Верх блока
-    scene.addQuad(
-        Vec3(bx2 - blockSize2 / 2, blockHeight2, bz2 - blockSize2 / 2),
-        Vec3(bx2 + blockSize2 / 2, blockHeight2, bz2 - blockSize2 / 2),
-        Vec3(bx2 + blockSize2 / 2, blockHeight2, bz2 + blockSize2 / 2),
-        Vec3(bx2 - blockSize2 / 2, blockHeight2, bz2 + blockSize2 / 2),
-        mixedMat);
+    // Грани тетраэдра
+    scene.addTriangle(Triangle(base1, base2, top, tetraMat));
+    scene.addTriangle(Triangle(base2, base3, top, tetraMat));
+    scene.addTriangle(Triangle(base3, base1, top, tetraMat));
+    scene.addTriangle(Triangle(base1, base3, base2, tetraMat));
 
-    // Стороны низкого блока
-    scene.addQuad(
-        Vec3(bx2 - blockSize2 / 2, 0, bz2 + blockSize2 / 2),
-        Vec3(bx2 - blockSize2 / 2, blockHeight2, bz2 + blockSize2 / 2),
-        Vec3(bx2 - blockSize2 / 2, blockHeight2, bz2 - blockSize2 / 2),
-        Vec3(bx2 - blockSize2 / 2, 0, bz2 - blockSize2 / 2),
-        mixedMat);
-    scene.addQuad(
-        Vec3(bx2 + blockSize2 / 2, 0, bz2 - blockSize2 / 2),
-        Vec3(bx2 + blockSize2 / 2, blockHeight2, bz2 - blockSize2 / 2),
-        Vec3(bx2 + blockSize2 / 2, blockHeight2, bz2 + blockSize2 / 2),
-        Vec3(bx2 + blockSize2 / 2, 0, bz2 + blockSize2 / 2),
-        mixedMat);
-    scene.addQuad(
-        Vec3(bx2 - blockSize2 / 2, 0, bz2 - blockSize2 / 2),
-        Vec3(bx2 - blockSize2 / 2, blockHeight2, bz2 - blockSize2 / 2),
-        Vec3(bx2 + blockSize2 / 2, blockHeight2, bz2 - blockSize2 / 2),
-        Vec3(bx2 + blockSize2 / 2, 0, bz2 - blockSize2 / 2),
-        mixedMat);
-    scene.addQuad(
-        Vec3(bx2 + blockSize2 / 2, 0, bz2 + blockSize2 / 2),
-        Vec3(bx2 + blockSize2 / 2, blockHeight2, bz2 + blockSize2 / 2),
-        Vec3(bx2 - blockSize2 / 2, blockHeight2, bz2 + blockSize2 / 2),
-        Vec3(bx2 - blockSize2 / 2, 0, bz2 + blockSize2 / 2),
-        mixedMat);
+    // Точечный источник света (маленький треугольник)
+    Triangle lightTri(
+        Vec3(0, size * 2 - 0.1f, 0),
+        Vec3(0.2f, size * 2 - 0.1f, 0.2f),
+        Vec3(-0.2f, size * 2 - 0.1f, 0.2f),
+        lightMat);
 
-    // Источник света на потолке
-    float lightSize = 2.0f;
-    float lightY = size * 2 - 0.01f;
+    scene.addTriangle(lightTri);
+    scene.addLight(lightTri, Color(12.0f, 12.0f, 10.0f));
+}
 
-    Triangle lightTri1(
+void createChairAndTableScene(Scene &scene)
+{
+    // Материалы для комнаты
+    int floorMat = scene.addMaterial(Material::Diffuse(Color(0.7f, 0.7f, 0.6f)));
+    int wallMat = scene.addMaterial(Material::Diffuse(Color(0.8f, 0.85f, 0.9f)));
+    int ceilingMat = scene.addMaterial(Material::Diffuse(Color(0.95f, 0.95f, 0.97f)));
+
+    // Материалы для мебели
+    int woodMat = scene.addMaterial(Material::Mixed(
+        Color(0.4f, 0.3f, 0.2f),  // Диффузный цвет (темное дерево)
+        Color(0.3f, 0.25f, 0.2f), // Зеркальный цвет
+        0.1f                      // Вероятность зеркального отражения
+        ));
+
+    int metalMat = scene.addMaterial(Material::Specular(Color(0.8f, 0.8f, 0.9f)));
+
+    int leatherMat = scene.addMaterial(Material::Diffuse(Color(0.15f, 0.1f, 0.05f)));
+
+    int glassMat = scene.addMaterial(Material::Mixed(
+        Color(0.05f, 0.05f, 0.05f), // Очень темный диффузный
+        Color(0.95f, 0.95f, 0.95f), // Почти идеальное зеркало
+        0.85f                       // Высокая вероятность зеркальности
+        ));
+
+    // Источники света
+    int ceilingLightMat = scene.addMaterial(Material::Emissive(Color(20.0f, 20.0f, 18.0f)));
+    int lampLightMat = scene.addMaterial(Material::Emissive(Color(25.0f, 22.0f, 18.0f)));
+    int windowLightMat = scene.addMaterial(Material::Emissive(Color(12.0f, 15.0f, 20.0f)));
+
+    // Размеры комнаты
+    float roomWidth = 12.0f;
+    float roomHeight = 8.0f;
+    float roomDepth = 10.0f;
+
+    // ===== СТЕНЫ КОМНАТЫ =====
+
+    // Пол
+    scene.addQuad(
+        Vec3(-roomWidth / 2, 0, -roomDepth / 2),
+        Vec3(roomWidth / 2, 0, -roomDepth / 2),
+        Vec3(roomWidth / 2, 0, roomDepth / 2),
+        Vec3(-roomWidth / 2, 0, roomDepth / 2),
+        floorMat);
+
+    // Потолок
+    scene.addQuad(
+        Vec3(-roomWidth / 2, roomHeight, roomDepth / 2),
+        Vec3(roomWidth / 2, roomHeight, roomDepth / 2),
+        Vec3(roomWidth / 2, roomHeight, -roomDepth / 2),
+        Vec3(-roomWidth / 2, roomHeight, -roomDepth / 2),
+        ceilingMat);
+
+    // Задняя стена
+    scene.addQuad(
+        Vec3(-roomWidth / 2, 0, -roomDepth / 2),
+        Vec3(-roomWidth / 2, roomHeight, -roomDepth / 2),
+        Vec3(roomWidth / 2, roomHeight, -roomDepth / 2),
+        Vec3(roomWidth / 2, 0, -roomDepth / 2),
+        wallMat);
+
+    // Правая стена
+    scene.addQuad(
+        Vec3(roomWidth / 2, 0, -roomDepth / 2),
+        Vec3(roomWidth / 2, roomHeight, -roomDepth / 2),
+        Vec3(roomWidth / 2, roomHeight, roomDepth / 2),
+        Vec3(roomWidth / 2, 0, roomDepth / 2),
+        wallMat);
+
+    // Левая стена (частично окно)
+    scene.addQuad(
+        Vec3(-roomWidth / 2, 0, -roomDepth / 2),
+        Vec3(-roomWidth / 2, roomHeight, -roomDepth / 2),
+        Vec3(-roomWidth / 2, roomHeight, -2.0f),
+        Vec3(-roomWidth / 2, 0, -2.0f),
+        wallMat);
+
+    // Левая стена - окно
+    Triangle window1(Vec3(-roomWidth / 2, 2.0f, -2.0f), Vec3(-roomWidth / 2, 6.0f, -2.0f), Vec3(-roomWidth / 2, 6.0f, 2.0f), windowLightMat);
+    Triangle window2(Vec3(-roomWidth / 2, 2.0f, -2.0f), Vec3(-roomWidth / 2, 6.0f, 2.0f), Vec3(-roomWidth / 2, 2.0f, 2.0f), windowLightMat);
+    scene.addTriangle(window1);
+    scene.addTriangle(window2);
+    scene.addLight(window1, Color(12.0f, 15.0f, 20.0f));
+    scene.addLight(window2, Color(12.0f, 15.0f, 20.0f));
+
+    // Левая стена (продолжение после окна)
+    scene.addQuad(
+        Vec3(-roomWidth / 2, 0, 2.0f),
+        Vec3(-roomWidth / 2, roomHeight, 2.0f),
+        Vec3(-roomWidth / 2, roomHeight, roomDepth / 2),
+        Vec3(-roomWidth / 2, 0, roomDepth / 2),
+        wallMat);
+
+    // ===== СТОЛ =====
+
+    // Ножки стола (4 цилиндра, аппроксимированные призмами)
+    float tableHeight = 3.0f;
+    float tableWidth = 4.0f;
+    float tableDepth = 2.5f;
+    float legThickness = 0.2f;
+
+    // Функция для создания квадратной ножки
+    auto addTableLeg = [&](float x, float z)
+    {
+        // Передняя грань
+        scene.addQuad(
+            Vec3(x - legThickness / 2, 0, z - legThickness / 2),
+            Vec3(x + legThickness / 2, 0, z - legThickness / 2),
+            Vec3(x + legThickness / 2, tableHeight, z - legThickness / 2),
+            Vec3(x - legThickness / 2, tableHeight, z - legThickness / 2),
+            woodMat);
+        // Задняя грань
+        scene.addQuad(
+            Vec3(x - legThickness / 2, 0, z + legThickness / 2),
+            Vec3(x + legThickness / 2, 0, z + legThickness / 2),
+            Vec3(x + legThickness / 2, tableHeight, z + legThickness / 2),
+            Vec3(x - legThickness / 2, tableHeight, z + legThickness / 2),
+            woodMat);
+        // Левая грань
+        scene.addQuad(
+            Vec3(x - legThickness / 2, 0, z - legThickness / 2),
+            Vec3(x - legThickness / 2, 0, z + legThickness / 2),
+            Vec3(x - legThickness / 2, tableHeight, z + legThickness / 2),
+            Vec3(x - legThickness / 2, tableHeight, z - legThickness / 2),
+            woodMat);
+        // Правая грань
+        scene.addQuad(
+            Vec3(x + legThickness / 2, 0, z - legThickness / 2),
+            Vec3(x + legThickness / 2, 0, z + legThickness / 2),
+            Vec3(x + legThickness / 2, tableHeight, z + legThickness / 2),
+            Vec3(x + legThickness / 2, tableHeight, z - legThickness / 2),
+            woodMat);
+        // Верх ножки
+        scene.addQuad(
+            Vec3(x - legThickness / 2, tableHeight, z - legThickness / 2),
+            Vec3(x + legThickness / 2, tableHeight, z - legThickness / 2),
+            Vec3(x + legThickness / 2, tableHeight, z + legThickness / 2),
+            Vec3(x - legThickness / 2, tableHeight, z + legThickness / 2),
+            woodMat);
+    };
+
+    // Четыре ножки стола
+    addTableLeg(-tableWidth / 2, -tableDepth / 2);
+    addTableLeg(tableWidth / 2, -tableDepth / 2);
+    addTableLeg(-tableWidth / 2, tableDepth / 2);
+    addTableLeg(tableWidth / 2, tableDepth / 2);
+
+    // Столешница
+    float tabletopThickness = 0.1f;
+    scene.addQuad(
+        Vec3(-tableWidth / 2 - 0.3f, tableHeight, -tableDepth / 2 - 0.3f),
+        Vec3(tableWidth / 2 + 0.3f, tableHeight, -tableDepth / 2 - 0.3f),
+        Vec3(tableWidth / 2 + 0.3f, tableHeight, tableDepth / 2 + 0.3f),
+        Vec3(-tableWidth / 2 - 0.3f, tableHeight, tableDepth / 2 + 0.3f),
+        woodMat);
+
+    // ===== СТУЛ =====
+
+    float chairX = 2.0f;
+    float chairZ = -1.0f;
+    float chairHeight = 3.5f;
+    float seatHeight = 1.8f;
+    float chairWidth = 1.2f;
+    float chairDepth = 1.0f;
+
+    // Ножки стула (4 штуки)
+    float chairLegThickness = 0.15f;
+
+    // Задние ножки (высокие)
+    addTableLeg(chairX - chairWidth / 2, chairZ - chairDepth / 2 + 0.1f);
+    addTableLeg(chairX + chairWidth / 2, chairZ - chairDepth / 2 + 0.1f);
+
+    // Передние ножки (ниже)
+    // Левая передняя
+    scene.addQuad(
+        Vec3(chairX - chairWidth / 2, 0, chairZ + chairDepth / 2 - 0.1f),
+        Vec3(chairX - chairWidth / 2 + chairLegThickness, 0, chairZ + chairDepth / 2 - 0.1f),
+        Vec3(chairX - chairWidth / 2 + chairLegThickness, seatHeight, chairZ + chairDepth / 2 - 0.1f),
+        Vec3(chairX - chairWidth / 2, seatHeight, chairZ + chairDepth / 2 - 0.1f),
+        woodMat);
+
+    // Правая передняя
+    scene.addQuad(
+        Vec3(chairX + chairWidth / 2 - chairLegThickness, 0, chairZ + chairDepth / 2 - 0.1f),
+        Vec3(chairX + chairWidth / 2, 0, chairZ + chairDepth / 2 - 0.1f),
+        Vec3(chairX + chairWidth / 2, seatHeight, chairZ + chairDepth / 2 - 0.1f),
+        Vec3(chairX + chairWidth / 2 - chairLegThickness, seatHeight, chairZ + chairDepth / 2 - 0.1f),
+        woodMat);
+
+    // Сиденье стула
+    scene.addQuad(
+        Vec3(chairX - chairWidth / 2, seatHeight, chairZ - chairDepth / 2),
+        Vec3(chairX + chairWidth / 2, seatHeight, chairZ - chairDepth / 2),
+        Vec3(chairX + chairWidth / 2, seatHeight, chairZ + chairDepth / 2),
+        Vec3(chairX - chairWidth / 2, seatHeight, chairZ + chairDepth / 2),
+        leatherMat);
+
+    // Спинка стула
+    float backHeight = 2.5f;
+    scene.addQuad(
+        Vec3(chairX - chairWidth / 2, seatHeight, chairZ - chairDepth / 2),
+        Vec3(chairX + chairWidth / 2, seatHeight, chairZ - chairDepth / 2),
+        Vec3(chairX + chairWidth / 2, seatHeight + backHeight, chairZ - chairDepth / 2 + 0.05f),
+        Vec3(chairX - chairWidth / 2, seatHeight + backHeight, chairZ - chairDepth / 2 + 0.05f),
+        leatherMat);
+
+    // ===== КНИГА НА СТОЛЕ =====
+
+    float bookX = -0.5f;
+    float bookZ = 0.0f;
+    float bookY = tableHeight + 0.01f;
+    float bookWidth = 0.8f;
+    float bookHeight = 0.05f;
+    float bookDepth = 0.6f;
+
+    // Обложка книги (красная)
+    int bookCoverMat = scene.addMaterial(Material::Diffuse(Color(0.6f, 0.1f, 0.1f)));
+
+    // Верхняя обложка
+    scene.addQuad(
+        Vec3(bookX - bookWidth / 2, bookY + bookHeight, bookZ - bookDepth / 2),
+        Vec3(bookX + bookWidth / 2, bookY + bookHeight, bookZ - bookDepth / 2),
+        Vec3(bookX + bookWidth / 2, bookY + bookHeight, bookZ + bookDepth / 2),
+        Vec3(bookX - bookWidth / 2, bookY + bookHeight, bookZ + bookDepth / 2),
+        bookCoverMat);
+
+    // Боковые стороны книги
+    scene.addQuad(
+        Vec3(bookX - bookWidth / 2, bookY, bookZ - bookDepth / 2),
+        Vec3(bookX + bookWidth / 2, bookY, bookZ - bookDepth / 2),
+        Vec3(bookX + bookWidth / 2, bookY + bookHeight, bookZ - bookDepth / 2),
+        Vec3(bookX - bookWidth / 2, bookY + bookHeight, bookZ - bookDepth / 2),
+        bookCoverMat);
+
+    // ===== СТАКАН НА СТОЛЕ =====
+
+    float glassX = 1.0f;
+    float glassZ = 0.5f;
+    float glassY = tableHeight + 0.01f;
+    float glassRadius = 0.3f;
+    float glassHeight = 0.8f;
+
+    // Функция для создания цилиндра (аппроксимированного 8-угольной призмой)
+    auto addCylinder = [&](float centerX, float centerY, float centerZ, float radius, float height, int material)
+    {
+        int segments = 8;
+        std::vector<Vec3> topVertices;
+        std::vector<Vec3> bottomVertices;
+
+        // Создаем вершины для верхнего и нижнего кругов
+        for (int i = 0; i < segments; i++)
+        {
+            float angle = (2.0f * M_PI * i) / segments;
+            float x = centerX + radius * std::cos(angle);
+            float z = centerZ + radius * std::sin(angle);
+
+            topVertices.push_back(Vec3(x, centerY + height, z));
+            bottomVertices.push_back(Vec3(x, centerY, z));
+        }
+
+        // Создаем боковые грани
+        for (int i = 0; i < segments; i++)
+        {
+            int next = (i + 1) % segments;
+
+            // Боковая грань
+            scene.addQuad(
+                bottomVertices[i],
+                bottomVertices[next],
+                topVertices[next],
+                topVertices[i],
+                material);
+
+            // Треугольники для верхней крышки
+            scene.addTriangle(Triangle(
+                Vec3(centerX, centerY + height, centerZ),
+                topVertices[i],
+                topVertices[next],
+                material));
+
+            // Треугольники для нижней крышки
+            scene.addTriangle(Triangle(
+                Vec3(centerX, centerY, centerZ),
+                bottomVertices[next],
+                bottomVertices[i],
+                material));
+        }
+    };
+
+    // Стеклянный стакан
+    addCylinder(glassX, glassY, glassZ, glassRadius, glassHeight, glassMat);
+
+    // Вода в стакане (голубая)
+    int waterMat = scene.addMaterial(Material::Mixed(
+        Color(0.1f, 0.3f, 0.6f),
+        Color(0.9f, 0.95f, 1.0f),
+        0.2f));
+
+    float waterHeight = glassHeight * 0.7f;
+    addCylinder(glassX, glassY + 0.01f, glassZ, glassRadius * 0.95f, waterHeight, waterMat);
+
+    // ===== ЛАМПА НА СТОЛЕ =====
+
+    float lampX = -1.5f;
+    float lampZ = -0.5f;
+    float lampBaseY = tableHeight + 0.01f;
+
+    // Основание лампы (металл)
+    float baseRadius = 0.15f;
+    float baseHeight = 0.1f;
+    addCylinder(lampX, lampBaseY, lampZ, baseRadius, baseHeight, metalMat);
+
+    // Стойка лампы
+    float standHeight = 1.2f;
+    float standRadius = 0.03f;
+    addCylinder(lampX, lampBaseY + baseHeight, lampZ, standRadius, standHeight, metalMat);
+
+    // Абажур (конусообразный)
+    float shadeBottomRadius = 0.4f;
+    float shadeTopRadius = 0.2f;
+    float shadeHeight = 0.3f;
+    float shadeY = lampBaseY + baseHeight + standHeight;
+
+    int shadeMat = scene.addMaterial(Material::Diffuse(Color(0.9f, 0.85f, 0.8f)));
+
+    // Создаем усеченный конус (аппроксимированный)
+    int shadeSegments = 8;
+    for (int i = 0; i < shadeSegments; i++)
+    {
+        float angle1 = (2.0f * M_PI * i) / shadeSegments;
+        float angle2 = (2.0f * M_PI * (i + 1)) / shadeSegments;
+
+        // Вершины на нижнем круге
+        Vec3 bottom1(
+            lampX + shadeBottomRadius * std::cos(angle1),
+            shadeY,
+            lampZ + shadeBottomRadius * std::sin(angle1));
+        Vec3 bottom2(
+            lampX + shadeBottomRadius * std::cos(angle2),
+            shadeY,
+            lampZ + shadeBottomRadius * std::sin(angle2));
+
+        // Вершины на верхнем круге
+        Vec3 top1(
+            lampX + shadeTopRadius * std::cos(angle1),
+            shadeY + shadeHeight,
+            lampZ + shadeTopRadius * std::sin(angle1));
+        Vec3 top2(
+            lampX + shadeTopRadius * std::cos(angle2),
+            shadeY + shadeHeight,
+            lampZ + shadeTopRadius * std::sin(angle2));
+
+        // Боковая грань абажура
+        scene.addQuad(bottom1, bottom2, top2, top1, shadeMat);
+
+        // Нижний круг абажура
+        scene.addTriangle(Triangle(Vec3(lampX, shadeY, lampZ), bottom1, bottom2, shadeMat));
+
+        // Верхний круг абажура (с источником света)
+        if (i == 0)
+        {
+            Triangle lampLight1(Vec3(lampX, shadeY + shadeHeight, lampZ), top1, top2, lampLightMat);
+            scene.addTriangle(lampLight1);
+            scene.addLight(lampLight1, Color(25.0f, 22.0f, 18.0f));
+        }
+        scene.addTriangle(Triangle(Vec3(lampX, shadeY + shadeHeight, lampZ), top2, top1, shadeMat));
+    }
+
+    // ===== ИСТОЧНИКИ ОСВЕЩЕНИЯ НА ПОТОЛКЕ =====
+
+    // Основной источник света на потолке
+    float lightSize = 1.5f;
+    float lightY = roomHeight - 0.01f;
+
+    Triangle ceilingLight1(
         Vec3(-lightSize, lightY, -lightSize),
         Vec3(lightSize, lightY, -lightSize),
         Vec3(lightSize, lightY, lightSize),
-        lightMat);
-    Triangle lightTri2(
+        ceilingLightMat);
+    Triangle ceilingLight2(
         Vec3(-lightSize, lightY, -lightSize),
         Vec3(lightSize, lightY, lightSize),
         Vec3(-lightSize, lightY, lightSize),
-        lightMat);
+        ceilingLightMat);
 
-    scene.addTriangle(lightTri1);
-    scene.addTriangle(lightTri2);
-    scene.addLight(lightTri1, Color(15.0f, 15.0f, 15.0f));
-    scene.addLight(lightTri2, Color(15.0f, 15.0f, 15.0f));
+    scene.addTriangle(ceilingLight1);
+    scene.addTriangle(ceilingLight2);
+    scene.addLight(ceilingLight1, Color(20.0f, 20.0f, 18.0f));
+    scene.addLight(ceilingLight2, Color(20.0f, 20.0f, 18.0f));
+
+    // ===== ДЕКОРАТИВНЫЕ ЭЛЕМЕНТЫ =====
+
+    // Картина на стене
+    int paintingMat = scene.addMaterial(Material::Diffuse(Color(0.9f, 0.8f, 0.1f)));
+    int frameMat = scene.addMaterial(Material::Specular(Color(0.7f, 0.6f, 0.3f)));
+
+    float paintingX = 0;
+    float paintingZ = -roomDepth / 2 + 0.01f;
+    float paintingY = roomHeight * 0.6f;
+    float paintingWidth = 3.0f;
+    float paintingHeight = 2.0f;
+    float frameThickness = 0.1f;
+
+    // Сама картина
+    scene.addQuad(
+        Vec3(paintingX - paintingWidth / 2, paintingY - paintingHeight / 2, paintingZ),
+        Vec3(paintingX + paintingWidth / 2, paintingY - paintingHeight / 2, paintingZ),
+        Vec3(paintingX + paintingWidth / 2, paintingY + paintingHeight / 2, paintingZ),
+        Vec3(paintingX - paintingWidth / 2, paintingY + paintingHeight / 2, paintingZ),
+        paintingMat);
+
+    // Рамка картины (верхняя часть)
+    scene.addQuad(
+        Vec3(paintingX - paintingWidth / 2 - frameThickness, paintingY + paintingHeight / 2, paintingZ - 0.01f),
+        Vec3(paintingX + paintingWidth / 2 + frameThickness, paintingY + paintingHeight / 2, paintingZ - 0.01f),
+        Vec3(paintingX + paintingWidth / 2 + frameThickness, paintingY + paintingHeight / 2 + frameThickness, paintingZ - 0.01f),
+        Vec3(paintingX - paintingWidth / 2 - frameThickness, paintingY + paintingHeight / 2 + frameThickness, paintingZ - 0.01f),
+        frameMat);
 }
-
-// ==================== Сцена: Комната с зеркалами ====================
-
-void createMirrorRoom(Scene &scene)
-{
-    // Материалы
-    int whiteMat = scene.addMaterial(Material::Diffuse(Color(0.9f, 0.9f, 0.9f)));
-    int blueMat = scene.addMaterial(Material::Diffuse(Color(0.1f, 0.3f, 0.7f)));
-    int mirrorMat = scene.addMaterial(Material::Specular(Color(0.95f, 0.95f, 0.95f)));
-    int goldMat = scene.addMaterial(Material::Mixed(Color(0.3f, 0.2f, 0.1f), Color(0.9f, 0.7f, 0.3f), 0.6f));
-    int lightMat = scene.addMaterial(Material::Emissive(Color(20.0f, 20.0f, 18.0f)));
-
-    float size = 5.0f;
-
-    // Пол (шахматный паттерн - упрощенно белый)
-    scene.addQuad(
-        Vec3(-size, 0, -size), Vec3(size, 0, -size),
-        Vec3(size, 0, size), Vec3(-size, 0, size),
-        whiteMat);
-
-    // Потолок
-    scene.addQuad(
-        Vec3(-size, size * 2, size), Vec3(size, size * 2, size),
-        Vec3(size, size * 2, -size), Vec3(-size, size * 2, -size),
-        whiteMat);
-
-    // Задняя стена (зеркало)
-    scene.addQuad(
-        Vec3(-size, 0, -size), Vec3(-size, size * 2, -size),
-        Vec3(size, size * 2, -size), Vec3(size, 0, -size),
-        mirrorMat);
-
-    // Левая стена (синяя)
-    scene.addQuad(
-        Vec3(-size, 0, size), Vec3(-size, size * 2, size),
-        Vec3(-size, size * 2, -size), Vec3(-size, 0, -size),
-        blueMat);
-
-    // Правая стена (зеркало)
-    scene.addQuad(
-        Vec3(size, 0, -size), Vec3(size, size * 2, -size),
-        Vec3(size, size * 2, size), Vec3(size, 0, size),
-        mirrorMat);
-
-    // Сфера (аппроксимация октаэдром для простоты)
-    float cx = 0, cy = 2.5f, cz = -1.0f;
-    float r = 1.5f;
-
-    // Верхняя половина
-    scene.addTriangle(Triangle(Vec3(cx, cy + r, cz), Vec3(cx + r, cy, cz), Vec3(cx, cy, cz + r), goldMat));
-    scene.addTriangle(Triangle(Vec3(cx, cy + r, cz), Vec3(cx, cy, cz + r), Vec3(cx - r, cy, cz), goldMat));
-    scene.addTriangle(Triangle(Vec3(cx, cy + r, cz), Vec3(cx - r, cy, cz), Vec3(cx, cy, cz - r), goldMat));
-    scene.addTriangle(Triangle(Vec3(cx, cy + r, cz), Vec3(cx, cy, cz - r), Vec3(cx + r, cy, cz), goldMat));
-
-    // Нижняя половина
-    scene.addTriangle(Triangle(Vec3(cx, cy - r, cz), Vec3(cx, cy, cz + r), Vec3(cx + r, cy, cz), goldMat));
-    scene.addTriangle(Triangle(Vec3(cx, cy - r, cz), Vec3(cx - r, cy, cz), Vec3(cx, cy, cz + r), goldMat));
-    scene.addTriangle(Triangle(Vec3(cx, cy - r, cz), Vec3(cx, cy, cz - r), Vec3(cx - r, cy, cz), goldMat));
-    scene.addTriangle(Triangle(Vec3(cx, cy - r, cz), Vec3(cx + r, cy, cz), Vec3(cx, cy, cz - r), goldMat));
-
-    // Источник света
-    float lightSize = 1.5f;
-    float lightY = size * 2 - 0.01f;
-
-    Triangle lightTri1(Vec3(-lightSize, lightY, -lightSize), Vec3(lightSize, lightY, -lightSize), Vec3(lightSize, lightY, lightSize), lightMat);
-    Triangle lightTri2(Vec3(-lightSize, lightY, -lightSize), Vec3(lightSize, lightY, lightSize), Vec3(-lightSize, lightY, lightSize), lightMat);
-
-    scene.addTriangle(lightTri1);
-    scene.addTriangle(lightTri2);
-    scene.addLight(lightTri1, Color(20.0f, 20.0f, 18.0f));
-    scene.addLight(lightTri2, Color(20.0f, 20.0f, 18.0f));
-}
-
-// ==================== Сцена: Три сферы ====================
-
-void createThreeSpheres(Scene &scene)
-{
-    // Материалы
-    int groundMat = scene.addMaterial(Material::Diffuse(Color(0.5f, 0.5f, 0.5f)));
-    int diffuseMat = scene.addMaterial(Material::Diffuse(Color(0.8f, 0.2f, 0.2f)));
-    int mirrorMat = scene.addMaterial(Material::Specular(Color(0.9f, 0.9f, 0.9f)));
-    int glassMat = scene.addMaterial(Material::Mixed(Color(0.1f, 0.1f, 0.1f), Color(0.9f, 0.9f, 0.9f), 0.9f));
-    int skyMat = scene.addMaterial(Material::Emissive(Color(0.5f, 0.7f, 1.0f)));
-
-    // Большая плоскость (пол)
-    float groundSize = 20.0f;
-    scene.addQuad(
-        Vec3(-groundSize, 0, -groundSize), Vec3(groundSize, 0, -groundSize),
-        Vec3(groundSize, 0, groundSize), Vec3(-groundSize, 0, groundSize),
-        groundMat);
-
-    // Функция для создания икосаэдра (аппроксимация сферы)
-    auto addSphere = [&scene](float cx, float cy, float cz, float r, int matId)
-    {
-        // Упрощенная сфера из 8 треугольников (октаэдр)
-        scene.addTriangle(Triangle(Vec3(cx, cy + r, cz), Vec3(cx + r, cy, cz), Vec3(cx, cy, cz + r), matId));
-        scene.addTriangle(Triangle(Vec3(cx, cy + r, cz), Vec3(cx, cy, cz + r), Vec3(cx - r, cy, cz), matId));
-        scene.addTriangle(Triangle(Vec3(cx, cy + r, cz), Vec3(cx - r, cy, cz), Vec3(cx, cy, cz - r), matId));
-        scene.addTriangle(Triangle(Vec3(cx, cy + r, cz), Vec3(cx, cy, cz - r), Vec3(cx + r, cy, cz), matId));
-        scene.addTriangle(Triangle(Vec3(cx, cy - r, cz), Vec3(cx, cy, cz + r), Vec3(cx + r, cy, cz), matId));
-        scene.addTriangle(Triangle(Vec3(cx, cy - r, cz), Vec3(cx - r, cy, cz), Vec3(cx, cy, cz + r), matId));
-        scene.addTriangle(Triangle(Vec3(cx, cy - r, cz), Vec3(cx, cy, cz - r), Vec3(cx - r, cy, cz), matId));
-        scene.addTriangle(Triangle(Vec3(cx, cy - r, cz), Vec3(cx + r, cy, cz), Vec3(cx, cy, cz - r), matId));
-    };
-
-    // Три сферы
-    addSphere(-3.0f, 1.5f, 0, 1.5f, diffuseMat); // Красная диффузная
-    addSphere(0, 1.5f, -2.0f, 1.5f, mirrorMat);  // Зеркальная
-    addSphere(3.0f, 1.5f, 0, 1.5f, glassMat);    // Полузеркальная
-
-    // Небесная сфера (источник света)
-    float skyR = 100.0f;
-    // Упрощенно - просто большой квад сверху
-    Triangle skyTri1(Vec3(-50, 30, -50), Vec3(50, 30, -50), Vec3(50, 30, 50), skyMat);
-    Triangle skyTri2(Vec3(-50, 30, -50), Vec3(50, 30, 50), Vec3(-50, 30, 50), skyMat);
-
-    scene.addTriangle(skyTri1);
-    scene.addTriangle(skyTri2);
-    scene.addLight(skyTri1, Color(0.5f, 0.7f, 1.0f));
-    scene.addLight(skyTri2, Color(0.5f, 0.7f, 1.0f));
-}
-
-// ==================== Сцена: Цветное освещение ====================
-
-void createColoredLights(Scene &scene)
-{
-    // Материалы
-    int whiteMat = scene.addMaterial(Material::Diffuse(Color(0.9f, 0.9f, 0.9f)));
-    int mirrorMat = scene.addMaterial(Material::Specular(Color(0.95f, 0.95f, 0.95f)));
-    int redLightMat = scene.addMaterial(Material::Emissive(Color(25.0f, 2.0f, 2.0f)));
-    int greenLightMat = scene.addMaterial(Material::Emissive(Color(2.0f, 25.0f, 2.0f)));
-    int blueLightMat = scene.addMaterial(Material::Emissive(Color(2.0f, 2.0f, 25.0f)));
-
-    float size = 5.0f;
-
-    // Белые стены
-    // Пол
-    scene.addQuad(Vec3(-size, 0, -size), Vec3(size, 0, -size), Vec3(size, 0, size), Vec3(-size, 0, size), whiteMat);
-    // Потолок
-    scene.addQuad(Vec3(-size, size * 2, size), Vec3(size, size * 2, size), Vec3(size, size * 2, -size), Vec3(-size, size * 2, -size), whiteMat);
-    // Задняя стена
-    scene.addQuad(Vec3(-size, 0, -size), Vec3(-size, size * 2, -size), Vec3(size, size * 2, -size), Vec3(size, 0, -size), whiteMat);
-    // Левая стена
-    scene.addQuad(Vec3(-size, 0, size), Vec3(-size, size * 2, size), Vec3(-size, size * 2, -size), Vec3(-size, 0, -size), whiteMat);
-    // Правая стена
-    scene.addQuad(Vec3(size, 0, -size), Vec3(size, size * 2, -size), Vec3(size, size * 2, size), Vec3(size, 0, size), whiteMat);
-
-    // Зеркальный шар в центре
-    float cx = 0, cy = 3.0f, cz = -1.0f, r = 2.0f;
-    scene.addTriangle(Triangle(Vec3(cx, cy + r, cz), Vec3(cx + r, cy, cz), Vec3(cx, cy, cz + r), mirrorMat));
-    scene.addTriangle(Triangle(Vec3(cx, cy + r, cz), Vec3(cx, cy, cz + r), Vec3(cx - r, cy, cz), mirrorMat));
-    scene.addTriangle(Triangle(Vec3(cx, cy + r, cz), Vec3(cx - r, cy, cz), Vec3(cx, cy, cz - r), mirrorMat));
-    scene.addTriangle(Triangle(Vec3(cx, cy + r, cz), Vec3(cx, cy, cz - r), Vec3(cx + r, cy, cz), mirrorMat));
-    scene.addTriangle(Triangle(Vec3(cx, cy - r, cz), Vec3(cx, cy, cz + r), Vec3(cx + r, cy, cz), mirrorMat));
-    scene.addTriangle(Triangle(Vec3(cx, cy - r, cz), Vec3(cx - r, cy, cz), Vec3(cx, cy, cz + r), mirrorMat));
-    scene.addTriangle(Triangle(Vec3(cx, cy - r, cz), Vec3(cx, cy, cz - r), Vec3(cx - r, cy, cz), mirrorMat));
-    scene.addTriangle(Triangle(Vec3(cx, cy - r, cz), Vec3(cx + r, cy, cz), Vec3(cx, cy, cz - r), mirrorMat));
-
-    // Три цветных источника света
-    float lightY = size * 2 - 0.01f;
-    float lightSize = 1.0f;
-
-    // Красный свет (слева)
-    Triangle redLight1(Vec3(-3.5f - lightSize, lightY, -lightSize), Vec3(-3.5f + lightSize, lightY, -lightSize), Vec3(-3.5f + lightSize, lightY, lightSize), redLightMat);
-    Triangle redLight2(Vec3(-3.5f - lightSize, lightY, -lightSize), Vec3(-3.5f + lightSize, lightY, lightSize), Vec3(-3.5f - lightSize, lightY, lightSize), redLightMat);
-    scene.addTriangle(redLight1);
-    scene.addTriangle(redLight2);
-    scene.addLight(redLight1, Color(25.0f, 2.0f, 2.0f));
-    scene.addLight(redLight2, Color(25.0f, 2.0f, 2.0f));
-
-    // Зеленый свет (центр)
-    Triangle greenLight1(Vec3(-lightSize, lightY, -lightSize), Vec3(lightSize, lightY, -lightSize), Vec3(lightSize, lightY, lightSize), greenLightMat);
-    Triangle greenLight2(Vec3(-lightSize, lightY, -lightSize), Vec3(lightSize, lightY, lightSize), Vec3(-lightSize, lightY, lightSize), greenLightMat);
-    scene.addTriangle(greenLight1);
-    scene.addTriangle(greenLight2);
-    scene.addLight(greenLight1, Color(2.0f, 25.0f, 2.0f));
-    scene.addLight(greenLight2, Color(2.0f, 25.0f, 2.0f));
-
-    // Синий свет (справа)
-    Triangle blueLight1(Vec3(3.5f - lightSize, lightY, -lightSize), Vec3(3.5f + lightSize, lightY, -lightSize), Vec3(3.5f + lightSize, lightY, lightSize), blueLightMat);
-    Triangle blueLight2(Vec3(3.5f - lightSize, lightY, -lightSize), Vec3(3.5f + lightSize, lightY, lightSize), Vec3(3.5f - lightSize, lightY, lightSize), blueLightMat);
-    scene.addTriangle(blueLight1);
-    scene.addTriangle(blueLight2);
-    scene.addLight(blueLight1, Color(2.0f, 2.0f, 25.0f));
-    scene.addLight(blueLight2, Color(2.0f, 2.0f, 25.0f));
-}
-
-// ==================== Вспомогательные функции ====================
 
 void printUsage(const char *programName)
 {
@@ -1294,8 +1453,8 @@ int main(int argc, char *argv[])
     // Параметры по умолчанию
     int width = 512;
     int height = 512;
-    int samplesPerPixel = 128;
-    int maxDepth = 20;
+    int samplesPerPixel = 1;
+    int maxDepth = 5;
     std::string outputFile = "output.ppm";
     std::string objFile = "";
     float objScale = 1.0f;
@@ -1401,7 +1560,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        createThreeSpheres(scene);
+        createChairAndTableScene(scene);
     }
 
     scene.commit();
