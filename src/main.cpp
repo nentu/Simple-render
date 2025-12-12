@@ -124,15 +124,15 @@ int main(int argc, char *argv[])
     sceneNumber = std::max(1, std::min(sceneNumber, 6));
 
     std::cout << "========================================" << std::endl;
-    std::cout << "    Path Tracer - Лабораторная работа 5" << std::endl;
+    std::cout << "     Path Tracer — Работа №5" << std::endl;
     std::cout << "========================================" << std::endl;
-    std::cout << "Параметры:" << std::endl;
-    std::cout << "  Разрешение: " << width << "x" << height << std::endl;
-    std::cout << "  Лучей на пиксель: " << samplesPerPixel << std::endl;
-    std::cout << "  Макс. глубина: " << maxDepth << std::endl;
-    std::cout << "  Выходной файл: " << outputFile << std::endl;
-    std::cout << "  Гамма: " << gamma << std::endl;
-    std::cout << "  Сцена: " << sceneNumber << std::endl;
+    std::cout << "Настройки рендеринга:" << std::endl;
+    std::cout << "  Размер изображения: " << width << " x " << height << std::endl;
+    std::cout << "  Сэмплов на пиксель: " << samplesPerPixel << std::endl;
+    std::cout << "  Глубина трассировки: " << maxDepth << std::endl;
+    std::cout << "  Файл результата: " << outputFile << std::endl;
+    std::cout << "  Коррекция гаммы: " << gamma << std::endl;
+    std::cout << "  Выбранная сцена: " << sceneNumber << std::endl;
     if (!objFile.empty())
     {
         std::cout << "  OBJ файл: " << objFile << " (масштаб: " << objScale << ")" << std::endl;

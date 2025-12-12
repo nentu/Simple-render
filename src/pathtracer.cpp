@@ -245,7 +245,7 @@ std::vector<Color> PathTracer::render()
             if (completed % (totalPixels / 10) < camera.width)
             {
                 int progress = (completed * 100) / totalPixels;
-                std::cout << "  Прогресс: " << progress << "%" << std::endl;
+                std::cout << "Отрисовано: " << progress << "%" << std::endl;
             }
         }
     }
